@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/iand/zikade/kademlia"
 	ds "github.com/ipfs/go-datastore"
 	leveldb "github.com/ipfs/go-ds-leveldb"
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/libp2p/go-libp2p/core/protocol"
 	ma "github.com/multiformats/go-multiaddr"
 	manet "github.com/multiformats/go-multiaddr/net"
-	"github.com/plprobelab/go-kademlia/coord"
 	"github.com/plprobelab/go-kademlia/kad"
 	"github.com/plprobelab/go-kademlia/key"
 	"github.com/plprobelab/go-kademlia/routing/triert"
@@ -108,7 +108,7 @@ type Config struct {
 	Mode ModeOpt
 
 	// Kademlia holds the configuration of the underlying Kademlia implementation.
-	Kademlia *coord.Config
+	Kademlia *kademlia.Config
 
 	// BucketSize determines the number of closer peers to return
 	BucketSize int
@@ -164,7 +164,7 @@ type Config struct {
 func DefaultConfig() *Config {
 	return &Config{
 		Mode:              ModeOptAutoClient,
-		Kademlia:          coord.DefaultConfig(),
+		Kademlia:          kademlia.DefaultConfig(),
 		BucketSize:        20,
 		ProtocolID:        ProtocolIPFS,
 		RoutingTable:      nil, // nil because a routing table requires information about the local node. triert.TrieRT will be used if this field is nil.

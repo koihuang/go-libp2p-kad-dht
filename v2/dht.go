@@ -109,11 +109,14 @@ func New(h host.Host, cfg *Config) (*DHT, error) {
 		}
 	}
 
-	// // instantiate a new Kademlia DHT coordinator.
-	// d.kad, err = coord.NewCoordinator[key.Key256, ma.Multiaddr](nid, nil, nil, d.rt, cfg.Kademlia)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("new coordinator: %w", err)
-	// }
+	// TODO: implement kademlia.Router, possibly as a separate component or possibly use the kad-dht DHT itself
+	var rtr kademlia.Router[key.Key256, ma.Multiaddr]
+
+	// instantiate a new Kademlia DHT coordinator.
+	d.kad, err = kademlia.NewDht[key.Key256, ma.Multiaddr](nid, rtr, d.rt, cfg.Kademlia)
+	if err != nil {
+		return nil, fmt.Errorf("new kademlia dht: %w", err)
+	}
 
 	// determine mode to start in
 	switch cfg.Mode {
