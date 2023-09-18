@@ -510,6 +510,7 @@ func (dht *IpfsDHT) dialPeer(ctx context.Context, p peer.ID) error {
 	})
 
 	pi := peer.AddrInfo{ID: p}
+	fmt.Println("from query", pi.ID.Pretty())
 	if err := dht.host.Connect(ctx, pi); err != nil {
 		logger.Debugf("error connecting: %s", err)
 		routing.PublishQueryEvent(ctx, &routing.QueryEvent{
