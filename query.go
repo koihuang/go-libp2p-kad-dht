@@ -405,6 +405,7 @@ func (q *query) queryPeer(ctx context.Context, ch chan<- *queryUpdate, p peer.ID
 
 	startQuery := time.Now()
 	// send query RPC to the remote peer
+	fmt.Println("spawnquery", p.Pretty())
 	newPeers, err := q.queryFn(queryCtx, p)
 	if err != nil {
 		if queryCtx.Err() == nil {
