@@ -415,13 +415,13 @@ func (q *query) queryPeer(ctx context.Context, ch chan<- *queryUpdate, p peer.ID
 			ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
 			return
 		}
-
+		fmt.Println("try connect peer:", p.String(), " relay addr:", relayAddr)
 		addrInfo.Addrs = append(addrInfo.Addrs, maAddr)
 		if err := q.dht.dialPeer(dialCtx, addrInfo); err != nil {
 			if dialCtx.Err() == nil {
 				q.dht.peerStoppedDHT(q.dht.ctx, p)
 			}
-
+			fmt.Println("connect relay addr err", relayAddr, err.Error())
 			ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
 			return
 		}
