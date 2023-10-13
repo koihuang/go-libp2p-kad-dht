@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	ma "github.com/multiformats/go-multiaddr"
 	"math"
 	"sync"
 	"time"
@@ -399,15 +400,31 @@ func (q *query) queryPeer(ctx context.Context, ch chan<- *queryUpdate, p peer.ID
 	defer q.waitGroup.Done()
 	dialCtx, queryCtx := ctx, ctx
 
+	addrInfo := peer.AddrInfo{ID: p, Addrs: []ma.Multiaddr{}}
 	// dial the peer
-	if err := q.dht.dialPeer(dialCtx, p); err != nil {
+	if err := q.dht.dialPeer(dialCtx, addrInfo); err != nil {
 		fmt.Println("dial peer err, peer:%s err:%s", p.Pretty(), err.Error())
 		// remove the peer if there was a dial failure..but not because of a context cancellation
 		if dialCtx.Err() == nil {
 			q.dht.peerStoppedDHT(q.dht.ctx, p)
 		}
-		ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
-		return
+		relayPeer := q.queryPeers.GetReferrer(p)
+		relayAddr := fmt.Sprintf("/ipfs/%s/p2p-circuit/ipfs/%s", relayPeer.Pretty(), p.Pretty())
+		maAddr, err := ma.NewMultiaddr(relayAddr)
+		if err != nil {
+			ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
+			return
+		}
+
+		addrInfo.Addrs = append(addrInfo.Addrs, maAddr)
+		if err := q.dht.dialPeer(dialCtx, addrInfo); err != nil {
+			if dialCtx.Err() == nil {
+				q.dht.peerStoppedDHT(q.dht.ctx, p)
+			}
+
+			ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
+			return
+		}
 	}
 
 	startQuery := time.Now()
@@ -504,26 +521,25 @@ func (q *query) updateState(ctx context.Context, up *queryUpdate) {
 	}
 }
 
-func (dht *IpfsDHT) dialPeer(ctx context.Context, p peer.ID) error {
+func (dht *IpfsDHT) dialPeer(ctx context.Context, peer peer.AddrInfo) error {
 	// short-circuit if we're already connected.
-	if dht.host.Network().Connectedness(p) == network.Connected {
+	if dht.host.Network().Connectedness(peer.ID) == network.Connected {
 		return nil
 	}
 
 	logger.Debug("not connected. dialing.")
 	routing.PublishQueryEvent(ctx, &routing.QueryEvent{
 		Type: routing.DialingPeer,
-		ID:   p,
+		ID:   peer.ID,
 	})
 
-	pi := peer.AddrInfo{ID: p}
-	fmt.Println("from query", pi.ID.Pretty())
-	if err := dht.host.Connect(ctx, pi); err != nil {
+	fmt.Println("from query", peer.ID.Pretty())
+	if err := dht.host.Connect(ctx, peer); err != nil {
 		logger.Debugf("error connecting: %s", err)
 		routing.PublishQueryEvent(ctx, &routing.QueryEvent{
 			Type:  routing.QueryError,
 			Extra: err.Error(),
-			ID:    p,
+			ID:    peer.ID,
 		})
 
 		return err
