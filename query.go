@@ -396,6 +396,7 @@ func (q *query) queryPeer(ctx context.Context, ch chan<- *queryUpdate, p peer.ID
 
 	// dial the peer
 	if err := q.dht.dialPeer(dialCtx, p); err != nil {
+		fmt.Println("dial peer err, peer:%s err:%s", p.Pretty(), err.Error())
 		// remove the peer if there was a dial failure..but not because of a context cancellation
 		if dialCtx.Err() == nil {
 			q.dht.peerStoppedDHT(q.dht.ctx, p)
