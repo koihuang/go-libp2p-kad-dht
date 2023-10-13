@@ -89,6 +89,7 @@ func (dht *IpfsDHT) runLookupWithFollowup(ctx context.Context, target string, qu
 	// by stateless query functions (e.g. GetClosestPeers and therefore Provide and PutValue)
 	queryPeers := make([]peer.ID, 0, len(lookupRes.peers))
 	for i, p := range lookupRes.peers {
+		fmt.Println("query peer", p)
 		if state := lookupRes.state[i]; state == qpeerset.PeerHeard || state == qpeerset.PeerWaiting {
 			queryPeers = append(queryPeers, p)
 		}
