@@ -158,6 +158,9 @@ func (dht *IpfsDHT) runQuery(ctx context.Context, target string, queryFn queryFn
 		})
 		return nil, kb.ErrLookupFailure
 	}
+	for _, seedPeer := range seedPeers {
+		fmt.Println("seedPeer", seedPeer)
+	}
 
 	q := &query{
 		id:         uuid.New(),
