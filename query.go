@@ -158,6 +158,7 @@ func (dht *IpfsDHT) runQuery(ctx context.Context, target string, queryFn queryFn
 		})
 		return nil, kb.ErrLookupFailure
 	}
+	fmt.Println("len(seedPeers)", len(seedPeers))
 	for _, seedPeer := range seedPeers {
 		fmt.Println("seedPeer", seedPeer)
 	}
