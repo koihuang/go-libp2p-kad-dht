@@ -408,24 +408,24 @@ func (q *query) queryPeer(ctx context.Context, ch chan<- *queryUpdate, p peer.ID
 		if dialCtx.Err() == nil {
 			q.dht.peerStoppedDHT(q.dht.ctx, p)
 		}
-		//relayPeer := q.queryPeers.GetReferrer(p)
-		//relayAddr := fmt.Sprintf("/ipfs/%s/p2p-circuit/ipfs/%s", relayPeer.Pretty(), p.Pretty())
-		//maAddr, err := ma.NewMultiaddr(relayAddr)
-		//if err != nil {
-		//	ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
-		//	return
-		//}
-		//fmt.Println("try connect peer:", p.String(), " relay addr:", relayAddr)
-		//addrInfo.Addrs = append(addrInfo.Addrs, maAddr)
-		//if err := q.dht.dialPeer(dialCtx, addrInfo); err != nil {
-		//	if dialCtx.Err() == nil {
-		//		q.dht.peerStoppedDHT(q.dht.ctx, p)
-		//	}
-		//	fmt.Println("connect relay addr err", relayAddr, err.Error())
-		//	ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
-		//	return
-		//}
-		ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
+		relayPeer := q.queryPeers.GetReferrer(p)
+		relayAddr := fmt.Sprintf("/ipfs/%s/p2p-circuit/ipfs/%s", relayPeer.Pretty(), p.Pretty())
+		maAddr, err := ma.NewMultiaddr(relayAddr)
+		if err != nil {
+			ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
+			return
+		}
+		fmt.Println("try connect peer:", p.String(), " relay addr:", relayAddr)
+		addrInfo.Addrs = append(addrInfo.Addrs, maAddr)
+		if err := q.dht.dialPeer(dialCtx, addrInfo); err != nil {
+			if dialCtx.Err() == nil {
+				q.dht.peerStoppedDHT(q.dht.ctx, p)
+			}
+			fmt.Println("connect relay addr err", relayAddr, err.Error())
+			ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
+			return
+		}
+		//ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
 	}
 
 	startQuery := time.Now()
