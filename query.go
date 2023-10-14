@@ -426,6 +426,7 @@ func (q *query) queryPeer(ctx context.Context, ch chan<- *queryUpdate, p peer.ID
 			ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
 			return
 		}
+		fmt.Println("relay success, addrInfo", addrInfo)
 		_, err = client.Reserve(dialCtx, q.dht.host, q.dht.peerstore.PeerInfo(p))
 		if err != nil {
 			fmt.Printf("Reserve err, relay id:%s, err:%s\n", p.String(), err.Error())
