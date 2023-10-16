@@ -468,7 +468,20 @@ func (q *query) queryPeer(ctx context.Context, ch chan<- *queryUpdate, p peer.ID
 		// TODO: this behavior is really specific to how FindPeer works and not GetClosestPeers or any other function
 		isTarget := string(next.ID) == q.key
 		if isTarget || q.dht.queryPeerFilter(q.dht, *next) {
-			q.dht.maybeAddAddrs(next.ID, next.Addrs, pstore.TempAddrTTL)
+			var addrs []ma.Multiaddr
+			///ipfs/Qmd7V9hw7phrZQYSP3xQipwbhHqUyUSAAYJctjxyuqcuaZ/p2p-circuit/ipfs/Qmb8o69TkiM8S8VUxYqVKHfWXtm1xzf495UYqAUovg1CfY
+			relayAddr := fmt.Sprintf("/p2p/%s/p2p-circuit/ipfs/%s", q.dht.self.String(), next.ID.String())
+			maAddr, err := ma.NewMultiaddr(relayAddr)
+			if err != nil {
+				if queryCtx.Err() == nil {
+					q.dht.peerStoppedDHT(q.dht.ctx, p)
+				}
+				ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
+				return
+			}
+
+			addrs = append(next.Addrs, maAddr)
+			q.dht.maybeAddAddrs(next.ID, addrs, pstore.TempAddrTTL)
 			saw = append(saw, next.ID)
 		}
 	}
