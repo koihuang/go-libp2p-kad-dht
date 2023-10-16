@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/client"
 	ma "github.com/multiformats/go-multiaddr"
 	"math"
 	"sync"
@@ -409,8 +408,8 @@ func (q *query) queryPeer(ctx context.Context, ch chan<- *queryUpdate, p peer.ID
 		if dialCtx.Err() == nil {
 			q.dht.peerStoppedDHT(q.dht.ctx, p)
 		}
-		relayPeer := q.queryPeers.GetReferrer(p)
-		relayAddr := fmt.Sprintf("/ipfs/%s/p2p-circuit/ipfs/%s", relayPeer.Pretty(), p.Pretty())
+		//relayPeer := q.queryPeers.GetReferrer(p)
+		relayAddr := fmt.Sprintf("/p2p-circuit/ipfs/%s", p.Pretty())
 		maAddr, err := ma.NewMultiaddr(relayAddr)
 		if err != nil {
 			ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
@@ -427,10 +426,10 @@ func (q *query) queryPeer(ctx context.Context, ch chan<- *queryUpdate, p peer.ID
 			return
 		}
 		fmt.Println("relay success, addrInfo", addrInfo)
-		_, err = client.Reserve(dialCtx, q.dht.host, q.dht.peerstore.PeerInfo(p))
-		if err != nil {
-			fmt.Printf("Reserve err, relay id:%s, err:%s\n", p.String(), err.Error())
-		}
+		//_, err = client.Reserve(dialCtx, q.dht.host, q.dht.peerstore.PeerInfo(p))
+		//if err != nil {
+		//	fmt.Printf("Reserve err, relay id:%s, err:%s\n", p.String(), err.Error())
+		//}
 		//ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
 	}
 
