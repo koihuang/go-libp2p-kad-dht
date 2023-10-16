@@ -415,7 +415,7 @@ func (q *query) queryPeer(ctx context.Context, ch chan<- *queryUpdate, p peer.ID
 		//}
 
 		relayPeer := q.queryPeers.GetReferrer(p)
-		relayAddr := fmt.Sprintf("/p2p/%s/p2p-circuit/ipfs/%s", relayPeer, p.String())
+		relayAddr := fmt.Sprintf("/p2p/%s/p2p-circuit/p2p/%s", relayPeer, p.String())
 		//relayAddr := fmt.Sprintf("/p2p-circuit/ipfs/%s", p.String())
 		maAddr, err := ma.NewMultiaddr(relayAddr)
 		if err != nil {
@@ -423,7 +423,14 @@ func (q *query) queryPeer(ctx context.Context, ch chan<- *queryUpdate, p peer.ID
 			return
 		}
 		fmt.Println("try connect peer:", p.String(), " relay addr:", relayAddr)
-		addrInfo.Addrs = append(addrInfo.Addrs, maAddr)
+		relayAddr2 := fmt.Sprintf("/p2p-circuit/p2p/%s", p.String())
+		maAddr2, err := ma.NewMultiaddr(relayAddr2)
+		if err != nil {
+			ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
+			return
+		}
+		fmt.Println("try connect peer:", p.String(), " relay addr:", relayAddr2)
+		addrInfo.Addrs = append(addrInfo.Addrs, maAddr, maAddr2)
 		if err := q.dht.dialPeer(dialCtx, addrInfo); err != nil {
 			if dialCtx.Err() == nil {
 				q.dht.peerStoppedDHT(q.dht.ctx, p)
