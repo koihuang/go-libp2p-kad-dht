@@ -408,6 +408,11 @@ func (q *query) queryPeer(ctx context.Context, ch chan<- *queryUpdate, p peer.ID
 		if dialCtx.Err() == nil {
 			q.dht.peerStoppedDHT(q.dht.ctx, p)
 		}
+		if !q.queryPeers.Has(p) {
+			ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
+			return
+		}
+
 		//relayPeer := q.queryPeers.GetReferrer(p)
 		relayAddr := fmt.Sprintf("/p2p-circuit/ipfs/%s", p.Pretty())
 		maAddr, err := ma.NewMultiaddr(relayAddr)

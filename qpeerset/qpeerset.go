@@ -67,6 +67,16 @@ func NewQueryPeerset(key string) *QueryPeerset {
 	}
 }
 
+func (qp *QueryPeerset) Has(p peer.ID) bool {
+	for i := range qp.all {
+		if qp.all[i].id == p {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (qp *QueryPeerset) find(p peer.ID) int {
 	for i := range qp.all {
 		if qp.all[i].id == p {

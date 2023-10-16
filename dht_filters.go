@@ -2,6 +2,8 @@ package dht
 
 import (
 	"bytes"
+	"fmt"
+	"github.com/libp2p/go-libp2p/core/peerstore"
 	"net"
 	"sync"
 	"time"
@@ -90,6 +92,37 @@ func PublicRoutingTableFilter(dht interface{}, p peer.ID) bool {
 	conns := d.Host().Network().ConnsToPeer(p)
 	if len(conns) == 0 {
 		return false
+	}
+
+	for _, c := range conns {
+		ra := c.RemoteMultiaddr()
+		isRepeated := false
+		if !isRelayAddr(ra) && isPublicAddr(ra) {
+			peerInfo := d.Host().Peerstore().PeerInfo(c.RemotePeer())
+			for _, addr := range peerInfo.Addrs {
+				if addr.Equal(ra) {
+					isRepeated = true
+					break
+				}
+			}
+			if len(peerInfo.Addrs) != 0 && !isRepeated {
+				ip, err := ra.ValueForProtocol(ma.P_IP4)
+				if err != nil {
+					fmt.Sprintf("get ipv4 from remte addr %s err:%s\n", ra.String(), err)
+					return false
+				}
+
+				port, err := peerInfo.Addrs[0].ValueForProtocol(ma.P_TCP)
+				if err != nil {
+					fmt.Sprintf("get port from peerstore addr %s err:%s\n", peerInfo.Addrs[0].String(), err)
+					return false
+				}
+
+				addr := fmt.Sprintf("/ip4/%s/tcp/%s", ip, port)
+				d.Host().Peerstore().AddAddr(c.RemotePeer(), ma.StringCast(addr), peerstore.TempAddrTTL)
+				d.Host().Peerstore().AddAddr(c.RemotePeer(), ma.StringCast(addr), peerstore.TempAddrTTL)
+			}
+		}
 	}
 
 	// Do we have a public address for this peer?
