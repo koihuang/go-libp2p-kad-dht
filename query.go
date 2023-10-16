@@ -413,8 +413,8 @@ func (q *query) queryPeer(ctx context.Context, ch chan<- *queryUpdate, p peer.ID
 			return
 		}
 
-		//relayPeer := q.queryPeers.GetReferrer(p)
-		relayAddr := fmt.Sprintf("/p2p-circuit/ipfs/%s", p.Pretty())
+		relayPeer := q.queryPeers.GetReferrer(p)
+		relayAddr := fmt.Sprintf("/p2p/%s/p2p-circuit/ipfs/%s", relayPeer, p.String())
 		maAddr, err := ma.NewMultiaddr(relayAddr)
 		if err != nil {
 			ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
