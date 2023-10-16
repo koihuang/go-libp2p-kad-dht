@@ -470,7 +470,7 @@ func (q *query) queryPeer(ctx context.Context, ch chan<- *queryUpdate, p peer.ID
 		if isTarget || q.dht.queryPeerFilter(q.dht, *next) {
 			var addrs []ma.Multiaddr
 			///ipfs/Qmd7V9hw7phrZQYSP3xQipwbhHqUyUSAAYJctjxyuqcuaZ/p2p-circuit/ipfs/Qmb8o69TkiM8S8VUxYqVKHfWXtm1xzf495UYqAUovg1CfY
-			relayAddr := fmt.Sprintf("/p2p/%s/p2p-circuit/ipfs/%s", q.queryPeers.GetReferrer(p), next.ID.String())
+			relayAddr := fmt.Sprintf("/p2p/%s/p2p-circuit/ipfs/%s", p, next.ID.String())
 			maAddr, err := ma.NewMultiaddr(relayAddr)
 			if err != nil {
 				if queryCtx.Err() == nil {
