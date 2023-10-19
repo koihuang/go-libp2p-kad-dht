@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	pstore "github.com/libp2p/go-libp2p/core/peerstore"
-	"github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/client"
 	ma "github.com/multiformats/go-multiaddr"
 	"math"
 	"sync"
@@ -409,10 +408,10 @@ func (q *query) queryPeer(ctx context.Context, ch chan<- *queryUpdate, p peer.ID
 		if dialCtx.Err() == nil {
 			q.dht.peerStoppedDHT(q.dht.ctx, p)
 		}
-		//if !q.queryPeers.Has(p) {
-		//	ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
-		//	return
-		//}
+		if !q.queryPeers.Has(p) {
+			ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
+			return
+		}
 
 		relayPeer := q.queryPeers.GetReferrer(p)
 		relayAddr := fmt.Sprintf("/p2p/%s/p2p-circuit/p2p/%s", relayPeer, p.String())
@@ -422,15 +421,15 @@ func (q *query) queryPeer(ctx context.Context, ch chan<- *queryUpdate, p peer.ID
 			ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
 			return
 		}
+		//fmt.Println("try connect peer:", p.String(), " relay addr:", relayAddr)
+		//relayAddr2 := fmt.Sprintf("/p2p-circuit/p2p/%s", p.String())
+		//maAddr2, err := ma.NewMultiaddr(relayAddr2)
+		//if err != nil {
+		//	ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
+		//	return
+		//}
 		fmt.Println("try connect peer:", p.String(), " relay addr:", relayAddr)
-		relayAddr2 := fmt.Sprintf("/p2p-circuit/p2p/%s", p.String())
-		maAddr2, err := ma.NewMultiaddr(relayAddr2)
-		if err != nil {
-			ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
-			return
-		}
-		fmt.Println("try connect peer:", p.String(), " relay addr:", relayAddr2)
-		addrInfo.Addrs = append(addrInfo.Addrs, maAddr, maAddr2)
+		addrInfo.Addrs = append(addrInfo.Addrs, maAddr)
 		if err := q.dht.dialPeer(dialCtx, addrInfo); err != nil {
 			if dialCtx.Err() == nil {
 				q.dht.peerStoppedDHT(q.dht.ctx, p)
@@ -440,11 +439,11 @@ func (q *query) queryPeer(ctx context.Context, ch chan<- *queryUpdate, p peer.ID
 			return
 		}
 		fmt.Println("relay success, addrInfo", addrInfo)
-		_, err = client.Reserve(dialCtx, q.dht.host, q.dht.peerstore.PeerInfo(p))
-		if err != nil {
-			fmt.Printf("Reserve err, relay id:%s, err:%s\n", p.String(), err.Error())
-		}
-		ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
+		//_, err = client.Reserve(dialCtx, q.dht.host, q.dht.peerstore.PeerInfo(p))
+		//if err != nil {
+		//	fmt.Printf("Reserve err, relay id:%s, err:%s\n", p.String(), err.Error())
+		//}
+		//ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
 	}
 
 	startQuery := time.Now()
@@ -484,19 +483,19 @@ func (q *query) queryPeer(ctx context.Context, ch chan<- *queryUpdate, p peer.ID
 		if isTarget || q.dht.queryPeerFilter(q.dht, *next) {
 			//var addrs []ma.Multiaddr
 			/////ipfs/Qmd7V9hw7phrZQYSP3xQipwbhHqUyUSAAYJctjxyuqcuaZ/p2p-circuit/ipfs/Qmb8o69TkiM8S8VUxYqVKHfWXtm1xzf495UYqAUovg1CfY
-			relayAddr := fmt.Sprintf("/p2p/%s/p2p-circuit/ipfs/%s", p, next.ID.String())
-			maAddr, err := ma.NewMultiaddr(relayAddr)
-			if err != nil {
-				if queryCtx.Err() == nil {
-					q.dht.peerStoppedDHT(q.dht.ctx, p)
-				}
-				ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
-				return
-			}
-
-			addrs := append(next.Addrs, maAddr)
-			q.dht.maybeAddAddrs(next.ID, addrs, pstore.TempAddrTTL)
-			//q.dht.maybeAddAddrs(next.ID, next.Addrs, pstore.TempAddrTTL)
+			//relayAddr := fmt.Sprintf("/p2p/%s/p2p-circuit/ipfs/%s", p, next.ID.String())
+			//maAddr, err := ma.NewMultiaddr(relayAddr)
+			//if err != nil {
+			//	if queryCtx.Err() == nil {
+			//		q.dht.peerStoppedDHT(q.dht.ctx, p)
+			//	}
+			//	ch <- &queryUpdate{cause: p, unreachable: []peer.ID{p}}
+			//	return
+			//}
+			//
+			//addrs := append(next.Addrs, maAddr)
+			//q.dht.maybeAddAddrs(next.ID, addrs, pstore.TempAddrTTL)
+			q.dht.maybeAddAddrs(next.ID, next.Addrs, pstore.TempAddrTTL)
 			saw = append(saw, next.ID)
 		}
 	}
